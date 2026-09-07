@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Abnormal Material</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2530;
+    --steel:#3A4A5C;
+    --bg:#EDF1F3;
+    --panel:#FFFFFF;
+    --border:#D3DAE0;
+    --yellow:#FFC72C;
+    --yellow-dark:#8A5A00;
+    --red:#C53030;
+    --red-bg:#FCEBEB;
+    --green:#2F855A;
+    --green-bg:#E9F5EE;
+    --muted:#6B7684;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding:24px;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  h1{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:32px;
+    letter-spacing:0.5px;
+    margin:0;
+    text-transform:uppercase;
+  }
+  .sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .stats{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-left:5px solid var(--steel);
+    padding:8px 14px;
+    min-width:100px;
+  }
+  .stat.alert{border-left-color:var(--red);}
+  .stat .num{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1;}
+  .stat.alert .num{color:var(--red);}
+  .stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    padding:18px 20px;
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:18px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:0 0 14px;
+    color:var(--steel);
+  }
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1.4fr 1fr 1fr auto;
+    gap:10px;
+    align-items:end;
+  }
+  .field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  input,select,textarea{
+    width:100%;
+    padding:8px 9px;
+    border:1px solid var(--border);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    background:#fafbfc;
+  }
+  textarea{resize:vertical;min-height:38px;font-family:'Inter',sans-serif;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--steel);outline-offset:0;}
+  .form-row2{margin-top:10px;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 16px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  button:hover{background:var(--steel);}
+  button.ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--border);
+    text-transform:none;
+    font-weight:500;
+    font-size:12px;
+    padding:5px 10px;
+  }
+  button.ghost:hover{background:#f2f2f2;}
+  button.danger-ghost{color:var(--red);border-color:#eab8b8;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .tab{
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:600;
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--muted);
+    cursor:pointer;
+    text-transform:none;
+  }
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .date-range-bar{
+    display:flex;
+    align-items:end;
+    gap:10px;
+    margin-bottom:16px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .date-range-bar .field{min-width:150px;}
+  .date-range-bar button{margin-bottom:1px;}
+
+  .sync-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;}
+  .sync-row .field{flex:1;min-width:220px;}
+  .sync-status{
+    font-size:12px;
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--muted);
+    margin-top:8px;
+  }
+  .sync-status.ok{color:var(--green);}
+  .sync-status.err{color:var(--red);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--muted);
+    border-bottom:2px solid var(--ink);
+    padding:8px 8px;
+  }
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr.flag{background:var(--red-bg);}
+  tbody td{padding:9px 8px;vertical-align:middle;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    padding:3px 9px;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.ng{background:var(--red-bg);color:var(--red);}
+  .badge.pending{background:var(--yellow);color:var(--yellow-dark);}
+  .judge-select{
+    width:auto;
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    padding:3px 22px 3px 9px;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+    border:none;
+    cursor:pointer;
+    -webkit-appearance:none;
+    appearance:none;
+    background-repeat:no-repeat;
+    background-position:right 7px center;
+    background-size:9px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7684'/%3E%3C/svg%3E");
+  }
+  .judge-select.ok{background-color:var(--green-bg);color:var(--green);}
+  .judge-select.ng{background-color:var(--red-bg);color:var(--red);}
+  .judge-select.pending{background-color:var(--yellow);color:var(--yellow-dark);}
+  .badge.ncr-sudah{background:var(--green-bg);color:var(--green);}
+  .badge.ncr-belum{
+    background:var(--yellow);
+    color:var(--yellow-dark);
+    position:relative;
+  }
+  .stamp{
+    display:inline-block;
+    border:2px solid var(--red);
+    color:var(--red);
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:11px;
+    padding:2px 8px;
+    letter-spacing:0.5px;
+    transform:rotate(-4deg);
+    text-transform:uppercase;
+  }
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .row-actions{display:flex;gap:6px;}
+  .desc-cell{
+    max-width:220px;
+    color:var(--steel);
+    font-size:13px;
+    line-height:1.4;
+  }
+  @media (max-width:760px){
+    .form-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Abnormal Material Log</h1>
+      <div class="sub">Pencatatan hasil judge material &amp; status NCR</div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="sync-status" id="sync-status" style="margin-bottom:16px;"></div>
+
+  <div class="panel">
+    <h2>Tambah Data</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label>Tanggal</label>
+        <input type="date" id="in-tanggal">
+      </div>
+      <div class="field">
+        <label>Part Name</label>
+        <input type="text" id="in-part" placeholder="Nama part">
+      </div>
+      <div class="field">
+        <label>Judge</label>
+        <select id="in-judge">
+          <option value="OK">OK</option>
+          <option value="NG">NG</option>
+          <option value="Pending">Pending</option>
+        </select>
+      </div>
+      <div class="field" id="ncr-field">
+        <label>Status NCR</label>
+        <select id="in-ncr">
+          <option value="Belum">Belum dibuat</option>
+          <option value="Sudah">Sudah dibuat</option>
+        </select>
+      </div>
+      <div class="field">
+        <button id="btn-add">Tambah</button>
+      </div>
+    </div>
+    <div class="form-row2 field" id="desc-field">
+      <label>Deskripsi Problem</label>
+      <textarea id="in-desc" placeholder="Jelaskan problem/abnormal yang ditemukan..." rows="2"></textarea>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">Semua</button>
+      <button class="tab" data-filter="OK">OK</button>
+      <button class="tab" data-filter="NG">NG</button>
+      <button class="tab" data-filter="Pending">Pending</button>
+      <button class="tab" data-filter="belum">NG · Belum NCR</button>
+    </div>
+    <div class="date-range-bar">
+      <div class="field">
+        <label>Dari Tanggal</label>
+        <input type="date" id="filter-date-from">
+      </div>
+      <div class="field">
+        <label>Sampai Tanggal</label>
+        <input type="date" id="filter-date-to">
+      </div>
+      <button class="ghost" id="btn-clear-range">Reset Tanggal</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Part Name</th>
+          <th>Judge</th>
+          <th>Deskripsi Problem</th>
+          <th>Status NCR</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="empty" id="empty-msg" style="display:none;">Belum ada data. Tambahkan data material di atas.</div>
+  </div>
+
+</div>
+
+<script>
+let entries = [];
+let filter = 'all';
+let dateFrom = '';
+let dateTo = '';
+let scriptUrl = 'https://script.google.com/macros/s/AKfycbz8RVagc0If5cMdRDgSriQwEhezXCPMTT8fiY96JJ4DUVJBDz5Ee-oDlQTekDhGhlM/exec';
+
+const judgeSel = document.getElementById('in-judge');
+const ncrField = document.getElementById('ncr-field');
+
+const STORAGE_KEY = 'abnormal-material-entries';
+
+async function storageGet(key){
+  if(window.storage && typeof window.storage.get === 'function'){
+    try{
+      return await window.storage.get(key);
+    }catch(e){
+      return null;
+    }
+  }
+  const raw = localStorage.getItem(key);
+  return raw ? { value: raw } : null;
+}
+
+async function storageSet(key, value){
+  if(window.storage && typeof window.storage.set === 'function'){
+    try{
+      await window.storage.set(key, value);
+      return;
+    }catch(e){
+      // lanjut ke localStorage sebagai cadangan
+    }
+  }
+  localStorage.setItem(key, value);
+}
+
+async function loadData(){
+  try{
+    const res = await storageGet(STORAGE_KEY);
+    entries = res ? JSON.parse(res.value) : [];
+  }catch(e){
+    entries = [];
+  }
+  render();
+  await syncToSheets();
+}
+
+async function syncToSheets(){
+  const statusEl = document.getElementById('sync-status');
+
+  if(!scriptUrl){
+    return;
+  }
+
+  statusEl.textContent = 'Mengirim data...';
+  statusEl.className = 'sync-status';
+
+  try{
+    // mode 'no-cors' dipakai karena Google Apps Script Web App tidak
+    // mengirim header CORS, jadi respons tidak bisa dibaca browser,
+    // tapi data tetap terkirim dan diproses oleh script.
+    await fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(entries)
+    });
+    statusEl.textContent = `Auto-sync terkirim (${entries.length} baris) · ${new Date().toLocaleTimeString('id-ID')}`;
+    statusEl.className = 'sync-status ok';
+  }catch(e){
+    statusEl.textContent = 'Gagal auto-sync: ' + e.message;
+    statusEl.className = 'sync-status err';
+  }
+}
+
+async function saveData(){
+  try{
+    await storageSet(STORAGE_KEY, JSON.stringify(entries));
+  }catch(e){
+    console.error('Gagal menyimpan data', e);
+  }
+  await syncToSheets();
+}
+
+function fmtDate(d){
+  if(!d) return '-';
+  const dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt)) return d;
+  return dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function render(){
+  const tbody = document.getElementById('table-body');
+  const emptyMsg = document.getElementById('empty-msg');
+  tbody.innerHTML = '';
+
+  let list = entries.slice().sort((a,b) => (b.tanggal||'').localeCompare(a.tanggal||''));
+
+  if(filter === 'OK') list = list.filter(e => e.judge === 'OK');
+  else if(filter === 'NG') list = list.filter(e => e.judge === 'NG');
+  else if(filter === 'Pending') list = list.filter(e => e.judge === 'Pending');
+  else if(filter === 'belum') list = list.filter(e => e.judge === 'NG' && e.ncr === 'Belum');
+
+  if(dateFrom) list = list.filter(e => e.tanggal && e.tanggal >= dateFrom);
+  if(dateTo) list = list.filter(e => e.tanggal && e.tanggal <= dateTo);
+
+  if(list.length === 0){
+    emptyMsg.style.display = 'block';
+  } else {
+    emptyMsg.style.display = 'none';
+  }
+
+  list.forEach(e => {
+    const tr = document.createElement('tr');
+    const flagged = e.judge === 'NG' && e.ncr === 'Belum';
+    if(flagged) tr.className = 'flag';
+
+    let ncrCell;
+    if(e.ncr === 'Sudah'){
+      ncrCell = '<span class="badge ncr-sudah">Sudah dibuat</span>';
+    } else {
+      ncrCell = e.judge === 'NG' ? '<span class="stamp">Belum NCR</span>' : '<span class="badge ncr-belum">Belum dibuat</span>';
+    }
+
+    const descText = e.desc ? escapeHtml(e.desc) : '<span style="color:var(--muted);">-</span>';
+
+    tr.innerHTML = `
+      <td class="mono">${fmtDate(e.tanggal)}</td>
+      <td>${escapeHtml(e.part)}</td>
+      <td>
+        <select class="judge-select ${e.judge === 'OK' ? 'ok' : e.judge === 'NG' ? 'ng' : 'pending'}" data-action="change-judge" data-id="${e.id}">
+          <option value="OK" ${e.judge === 'OK' ? 'selected' : ''}>OK</option>
+          <option value="NG" ${e.judge === 'NG' ? 'selected' : ''}>NG</option>
+          <option value="Pending" ${e.judge === 'Pending' ? 'selected' : ''}>Pending</option>
+        </select>
+      </td>
+      <td class="desc-cell">${descText}</td>
+      <td>${ncrCell}</td>
+      <td class="row-actions">
+        <button class="ghost" data-action="toggle-ncr" data-id="${e.id}">${e.ncr === 'Belum' ? 'Tandai sudah' : 'Tandai belum'}</button>
+        <button class="ghost danger-ghost" data-action="delete" data-id="${e.id}">Hapus</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  renderStats();
+}
+
+function renderStats(){
+  const total = entries.length;
+  const okCount = entries.filter(e => e.judge === 'OK').length;
+  const ngCount = entries.filter(e => e.judge === 'NG').length;
+  const pendingCount = entries.filter(e => e.judge === 'Pending').length;
+  const belumCount = entries.filter(e => e.judge === 'NG' && e.ncr === 'Belum').length;
+
+  const statsEl = document.getElementById('stats');
+  statsEl.innerHTML = `
+    <div class="stat">
+      <div class="num">${total}</div>
+      <div class="lbl">Total data</div>
+    </div>
+    <div class="stat">
+      <div class="num">${okCount}</div>
+      <div class="lbl">Judge OK</div>
+    </div>
+    <div class="stat">
+      <div class="num">${ngCount}</div>
+      <div class="lbl">Judge NG</div>
+    </div>
+    <div class="stat">
+      <div class="num">${pendingCount}</div>
+      <div class="lbl">Judge Pending</div>
+    </div>
+    <div class="stat ${belumCount > 0 ? 'alert' : ''}">
+      <div class="num">${belumCount}</div>
+      <div class="lbl">NCR belum dibuat</div>
+    </div>
+  `;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+document.getElementById('btn-add').addEventListener('click', async () => {
+  const tanggal = document.getElementById('in-tanggal').value;
+  const part = document.getElementById('in-part').value.trim();
+  const judge = document.getElementById('in-judge').value;
+  const ncr = document.getElementById('in-ncr').value;
+  const desc = document.getElementById('in-desc').value.trim();
+
+  if(!tanggal || !part){
+    alert('Isi tanggal dan part name terlebih dahulu.');
+    return;
+  }
+
+  entries.push({
+    id: 'e' + Date.now() + Math.random().toString(36).slice(2,7),
+    tanggal, part, judge, ncr, desc
+  });
+
+  document.getElementById('in-part').value = '';
+  document.getElementById('in-tanggal').value = '';
+  document.getElementById('in-desc').value = '';
+  judgeSel.value = 'OK';
+  document.getElementById('in-ncr').value = 'Belum';
+
+  await saveData();
+  render();
+});
+
+document.getElementById('table-body').addEventListener('change', async (ev) => {
+  const sel = ev.target.closest('select[data-action="change-judge"]');
+  if(!sel) return;
+  const id = sel.dataset.id;
+  const e = entries.find(e => e.id === id);
+  if(e){
+    e.judge = sel.value;
+  }
+  await saveData();
+  render();
+});
+
+document.getElementById('table-body').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+
+  if(action === 'delete'){
+    entries = entries.filter(e => e.id !== id);
+  } else if(action === 'toggle-ncr'){
+    const e = entries.find(e => e.id === id);
+    if(e) e.ncr = e.ncr === 'Belum' ? 'Sudah' : 'Belum';
+  }
+
+  await saveData();
+  render();
+});
+
+document.getElementById('tabs').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('.tab');
+  if(!btn) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  filter = btn.dataset.filter;
+  render();
+});
+
+document.getElementById('filter-date-from').addEventListener('change', (ev) => {
+  dateFrom = ev.target.value;
+  render();
+});
+
+document.getElementById('filter-date-to').addEventListener('change', (ev) => {
+  dateTo = ev.target.value;
+  render();
+});
+
+document.getElementById('btn-clear-range').addEventListener('click', () => {
+  dateFrom = '';
+  dateTo = '';
+  document.getElementById('filter-date-from').value = '';
+  document.getElementById('filter-date-to').value = '';
+  render();
+});
+
+loadData();
+</script>
+</body>
+</html>
