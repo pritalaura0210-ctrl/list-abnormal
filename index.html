@@ -345,7 +345,7 @@
 
   <header>
     <div>
-      <h1>Abnormal Material Log</h1>
+      <h1>LIST ABNORMAL MATERIAL</h1>
       <div class="sub">Pencatatan hasil judge material &amp; status NCR</div>
     </div>
     <div class="stats" id="stats"></div>
@@ -438,73 +438,73 @@ const ncrField = document.getElementById('ncr-field');
 
 const STORAGE_KEY = 'abnormal-material-entries';
 
-async function storageGet(key){
-  if(window.storage && typeof window.storage.get === 'function'){
-    try{
-      return await window.storage.get(key);
-    }catch(e){
-      return null;
-    }
-  }
-  const raw = localStorage.getItem(key);
-  return raw ? { value: raw } : null;
+// Local storage cuma dipakai sebagai CACHE cadangan (misal saat offline),
+// BUKAN sumber data utama. Sumber data utama = Google Sheets lewat scriptUrl.
+function cacheGetLocal(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : [];
 }
 
-async function storageSet(key, value){
-  if(window.storage && typeof window.storage.set === 'function'){
-    try{
-      await window.storage.set(key, value);
-      return;
-    }catch(e){
-      // lanjut ke localStorage sebagai cadangan
-    }
-  }
-  localStorage.setItem(key, value);
+function cacheSetLocal(data){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 async function loadData(){
-  try{
-    const res = await storageGet(STORAGE_KEY);
-    entries = res ? JSON.parse(res.value) : [];
-  }catch(e){
-    entries = [];
+  const statusEl = document.getElementById('sync-status');
+
+  if(!scriptUrl){
+    entries = cacheGetLocal();
+    render();
+    return;
   }
+
+  statusEl.textContent = 'Mengambil data dari server...';
+  statusEl.className = 'sync-status';
+
+  try{
+    const res = await fetch(scriptUrl + '?action=list', { method: 'GET' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    entries = Array.isArray(data) ? data : (data.entries || []);
+    cacheSetLocal(entries);
+    statusEl.textContent = `Data terbaru dari server (${entries.length} baris) · ${new Date().toLocaleTimeString('id-ID')}`;
+    statusEl.className = 'sync-status ok';
+  }catch(e){
+    // Server gagal diakses (misal sedang offline) -> pakai cache lokal sbg cadangan
+    entries = cacheGetLocal();
+    statusEl.textContent = 'Gagal ambil data dari server, memakai cache lokal: ' + e.message;
+    statusEl.className = 'sync-status err';
+  }
+
   render();
-  await syncToSheets();
 }
 
-async function syncToSheets(){
+async function saveData(){
   const statusEl = document.getElementById('sync-status');
+
+  // simpan ke cache lokal dulu supaya UI tetap responsif
+  cacheSetLocal(entries);
 
   if(!scriptUrl){
     return;
   }
 
-  statusEl.textContent = 'Mengirim data...';
+  statusEl.textContent = 'Menyimpan ke server...';
   statusEl.className = 'sync-status';
 
   try{
-    await fetch(scriptUrl, {
+    const res = await fetch(scriptUrl, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(entries)
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'save', entries })
     });
-    statusEl.textContent = `Auto-sync terkirim (${entries.length} baris) · ${new Date().toLocaleTimeString('id-ID')}`;
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    statusEl.textContent = `Tersimpan di server (${entries.length} baris) · ${new Date().toLocaleTimeString('id-ID')}`;
     statusEl.className = 'sync-status ok';
   }catch(e){
-    statusEl.textContent = 'Gagal auto-sync: ' + e.message;
+    statusEl.textContent = 'Gagal simpan ke server (tersimpan lokal saja): ' + e.message;
     statusEl.className = 'sync-status err';
   }
-}
-
-async function saveData(){
-  try{
-    await storageSet(STORAGE_KEY, JSON.stringify(entries));
-  }catch(e){
-    console.error('Gagal menyimpan data', e);
-  }
-  await syncToSheets();
 }
 
 function fmtDate(d){
